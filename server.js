@@ -17,7 +17,7 @@ var httpServer = http.createServer(app);
 
 handlebars.create({ extname: '.hbs' });
 
-app.engine('handlebars',handlebars);
+app.engine('handlebars', handlebars);
 
 app.set('view engine', 'handlebars');
 
@@ -25,11 +25,14 @@ app.set('port', 4000);
 
 app.use(express.static(__dirname + '/public'));
 
-app.get('/*', function (req, res) {
+app.use('/*', function (req, res) {
     if (req.protocol !== 'https') {
         res.redirect(301, 'https://localhost:4000');
         return;
     }
+})
+
+app.get('/',function(req,res){
     res.render('index');
 })
 
