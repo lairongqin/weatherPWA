@@ -166,48 +166,46 @@
    * request goes through, then the card gets updated a second time with the
    * freshest data.
    */
-  app.getForecast = function (key, label) {
-    var statement = 'select * from weather.forecast where woeid=' + key;
-    var url = 'https://query.yahooapis.com/v1/public/yql?format=json&q=' +
-      statement;
+  app.getForecast = function (key) {
+    var url = "https://locahost:4000/weather/city/" + key
 
     // TODO add cache logic here
     // 先检查是否有缓存，有的话就先用缓存内容，等网络有响应了再用最新内容
-    if ('caches' in window) {
-      /*
-       * Check if the service worker has already cached this city's weather
-       * data. If the service worker has the data, then display the cached
-       * data while the app fetches the latest data.
-       */
-      caches.match(url).then(function (response) {
-        console.log('find cache response :', url)
-        if (response) {
-          response.json().then(function updateFromCache(json) {
-            var results = json.query.results;
-            results.key = key;
-            results.label = label;
-            results.created = json.query.created;
-            app.updateForecastCard(results);
-          });
-        }
-      });
-    }
+    // if ('caches' in window) {
+    //   /*
+    //    * Check if the service worker has already cached this city's weather
+    //    * data. If the service worker has the data, then display the cached
+    //    * data while the app fetches the latest data.
+    //    */
+    //   caches.match(url).then(function (response) {
+    //     console.log('find cache response :', url)
+    //     if (response) {
+    //       response.json().then(function updateFromCache(json) {
+    //         var results = json.query.results;
+    //         results.key = key;
+    //         results.label = label;
+    //         results.created = json.query.created;
+    //         app.updateForecastCard(results);
+    //       });
+    //     }
+    //   });
+    // }
 
     // Fetch the latest data.
     var request = new XMLHttpRequest();
     request.onreadystatechange = function () {
       if (request.readyState === XMLHttpRequest.DONE) {
         if (request.status === 200) {
-          var response = JSON.parse(request.response);
-          var results = response.query.results;
-          results.key = key;
-          results.label = label;
-          results.created = response.query.created;
-          app.updateForecastCard(results);
+          // var response = JSON.parse(request.response);
+          // var results = response.query.results;
+          // results.key = key;
+          // results.label = label;
+          // results.created = response.query.created;
+          // app.updateForecastCard(results);
         }
       } else {
         // Return the initial weather forecast since no data is available.
-        app.updateForecastCard(initialWeatherForecast);
+        // app.updateForecastCard(initialWeatherForecast);
       }
     };
     request.open('GET', url);
@@ -298,41 +296,41 @@
    * or when the user has not saved any cities. See startup code for more
    * discussion.
    */
-  var initialWeatherForecast = {
-    key: '2459115',
-    label: 'New York, NY',
-    created: '2016-07-22T01:00:00Z',
-    channel: {
-      astronomy: {
-        sunrise: "5:43 am",
-        sunset: "8:21 pm"
-      },
-      item: {
-        condition: {
-          text: "Windy",
-          date: "Thu, 21 Jul 2016 09:00 PM EDT",
-          temp: 56,
-          code: 24
-        },
-        forecast: [
-          { code: 44, high: 86, low: 70 },
-          { code: 44, high: 94, low: 73 },
-          { code: 4, high: 95, low: 78 },
-          { code: 24, high: 75, low: 89 },
-          { code: 24, high: 89, low: 77 },
-          { code: 44, high: 92, low: 79 },
-          { code: 44, high: 89, low: 77 }
-        ]
-      },
-      atmosphere: {
-        humidity: 56
-      },
-      wind: {
-        speed: 25,
-        direction: 195
-      }
-    }
-  };
+  // var initialWeatherForecast = {
+  //   key: '2459115',
+  //   label: 'New York, NY',
+  //   created: '2016-07-22T01:00:00Z',
+  //   channel: {
+  //     astronomy: {
+  //       sunrise: "5:43 am",
+  //       sunset: "8:21 pm"
+  //     },
+  //     item: {
+  //       condition: {
+  //         text: "Windy",
+  //         date: "Thu, 21 Jul 2016 09:00 PM EDT",
+  //         temp: 56,
+  //         code: 24
+  //       },
+  //       forecast: [
+  //         { code: 44, high: 86, low: 70 },
+  //         { code: 44, high: 94, low: 73 },
+  //         { code: 4, high: 95, low: 78 },
+  //         { code: 24, high: 75, low: 89 },
+  //         { code: 24, high: 89, low: 77 },
+  //         { code: 44, high: 92, low: 79 },
+  //         { code: 44, high: 89, low: 77 }
+  //       ]
+  //     },
+  //     atmosphere: {
+  //       humidity: 56
+  //     },
+  //     wind: {
+  //       speed: 25,
+  //       direction: 195
+  //     }
+  //   }
+  // };
   // TODO uncomment line below to test app with fake data
   // app.updateForecastCard(initialWeatherForecast);
 
@@ -342,18 +340,20 @@
   if (app.selectedCities) {
     app.selectedCities = JSON.parse(app.selectedCities);
     app.selectedCities.forEach(function (city) {
-      app.getForecast(city.key, city.label);
+      app.getForecast(city.key);
     });
   } else {
-    // app.updateForecastCard(initialWeatherForecast);
+
+    // 初始值应由IP定位来查询地址，现在先默认使西安。
     app.selectedCities = [
-      { key: initialWeatherForecast.key, label: initialWeatherForecast.label }
+      { key: '101110101' }
     ];
-    app.getForecast(initialWeatherForecast.key, initialWeatherForecast.label);
+    app.getForecast(app.selectedCities[0].key);
     app.saveSelectedCities();
   }
 
   // TODO add service worker code here
+  /*
   if ('serviceWorker' in navigator) {
     console.log('serviceWorker support , start installing Service Worker');
     navigator.serviceWorker
@@ -372,6 +372,6 @@
           console.log(error);
         })
     })
-
   }
+  */
 })();

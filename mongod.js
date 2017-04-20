@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-
+var WeatherData = require('./mongoDB/weatherData.js');
 mongoose.connect('mongodb://localhost/test');
 
 var db = mongoose.connection;
@@ -28,12 +28,23 @@ tempData = JSON.parse(tempData);
 
 var data = new WeatherData({
     citycode: String(tempData.result.citycode),
-    city: String(tempData.result.city),
+    // city: String(tempData.result.city),
+    city: '1',
     date: String(tempData.result.updatetime),
-    result:JSON.stringify(tempData.result)
+    result: JSON.stringify(tempData.result)
 })
 
-console.log('data',data);
+
+// data.save(function (err) {
+//     if (err) {
+//         console.err(err);
+//         return;
+//     }
+//     console.log('data has been saved');
+// })
+
+var b = WeatherData.find({citycode:'101110101'}).;
+console.log(b);
 
 // mongoDB 数据样例
 // JSON返回的对象示例
