@@ -167,7 +167,7 @@
    * freshest data.
    */
   app.getForecast = function (key) {
-    var url = "https://locahost:4000/weather/city/" + key
+    var url = "https://localhost:4000/weather/city/" + key
 
     // TODO add cache logic here
     // 先检查是否有缓存，有的话就先用缓存内容，等网络有响应了再用最新内容

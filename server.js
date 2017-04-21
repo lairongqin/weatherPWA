@@ -4,7 +4,7 @@ var path = require('path');
 var fs = require('fs');
 var https = require('https');
 var http = require('http');
-var getWeatherFromRestAPI = require('./weatherAPI/getWeatherFromeRestAPI.js')
+var getWeatherFromRestAPI = require('./weatherAPI/getWeatherFromRestAPI.js')
 
 var handlebars = require('express-handlebars');
 
@@ -17,9 +17,8 @@ var credentials = { key: privateKey, cert: certificate };
 var httpsServer = https.createServer(credentials, app);
 var httpServer = http.createServer(app);
 
-handlebars.create({ extname: '.hbs' });
 
-app.engine('handlebars', handlebars);
+app.engine('handlebars', handlebars());
 
 app.set('view engine', 'handlebars');
 
@@ -27,11 +26,13 @@ app.set('port', 4000);
 
 app.use(express.static(__dirname + '/public'));
 
-app.use('/*', function (req, res) {
+app.use('/*', function (req, res, next) {
+    console.log('receive req: ', req.url);
     if (req.protocol !== 'https') {
         res.redirect(301, 'https://localhost:4000');
         return;
     }
+    next();
 })
 
 app.get('/', function (req, res) {
@@ -39,12 +40,16 @@ app.get('/', function (req, res) {
 })
 
 app.get('/weather/city/:city', function (req, res) {
-    console.log(req.params);
+    console.log('in ', req.params);
     let citycode = req.params.city;
 
     // get the param to the getWeather function
-    getWeatherFromRestAPI(citycode, function (resultJson) {
-        res.json(resultJson);
+    getWeatherFromRestAPI(citycode, function (doc) {
+        if (doc) {
+            res.json(doc);
+        } else {
+            res.sendStatus(500);
+        }
     })
 })
 
