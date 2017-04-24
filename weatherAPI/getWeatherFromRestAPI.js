@@ -1,4 +1,6 @@
-var weatherData = require('../mongoDB/weatherData.js')
+var weatherData = require('../mongoDB/weatherData');
+var updateWeatherDataAndSave = require('./updateWeatherDataAndSave');
+var fetchWeatherDataAndSave = require('./fetchWeatherDataAndSave');
 
 // var weatherSchema = new Schema({
 //     citycode: String,
@@ -21,9 +23,10 @@ function getWeatherFromRestAPI(citycode, callback) {
         if (docs) {
             var now = Date.now();
             var lastUpdateTime = Date.parse(docs.date);
-
+            var tap = 3600000;
+            // var tap = 1;
             // if the time is larger than 1 houre , update the data;
-            if ((now - lastUpdateTime) > 3600000) {
+            if ((now - lastUpdateTime) > tap) {
 
                 // update data
                 updateWeatherDataAndSave(citycode, function (refreshData) {

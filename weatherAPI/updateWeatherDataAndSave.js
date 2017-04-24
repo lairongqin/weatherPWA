@@ -23,9 +23,7 @@ function updateWeatherDataAndSave(citycode, cb) {
 
             if (rawData) {
                 let parsedData = JSON.parse(rawData);
-
                 if (parsedData) {
-                    console.log(parsedData)
                     let updateOption = {
                         date: String(parsedData.result.updatetime),
                         result: JSON.stringify(parsedData.result)

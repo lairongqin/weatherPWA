@@ -1,4 +1,3 @@
-
 (function () {
   'use strict';
 
@@ -28,6 +27,10 @@
   });
 
   document.getElementById('butAdd').addEventListener('click', function () {
+
+    //  add option in dataList
+    app.addDataList(window.province,'#selectProvince');
+
     // Open/show the add new city dialog
     app.toggleAddDialog(true);
   });
@@ -64,6 +67,13 @@
     app.toggleAddDialog(false);
   });
 
+  document.querySelector('#selectProvince').addEventListener('click', function (ev) {
+    var selected = this.options[this.selectedIndex];
+    if (selected) {
+      var cityid = selected.getAttribute('cityid');
+      app.addDataList(window.city[cityid],'#selectCity');
+    }
+  })
 
   /*****************************************************************************
    *
@@ -80,25 +90,55 @@
     }
   };
 
+  // AddDataListInProvince
+  app.addDataList = function (arr,dataList) {
+    if (arr) {
+      var fragment = document.createDocumentFragment();
+
+      arr.forEach(function (el) {
+        var option = document.createElement('option');
+        option.value = el.citycode;
+        option.setAttribute('cityid', el.cityid);
+        option.innerText = el.city;
+        fragment.appendChild(option);
+      });
+
+      // var option = document.createElement('option');
+      // option.value = arr[4].citycode;
+      // option.setAttribute('cityid', arr[4].cityid);
+      // option.innerText = arr[4].city;
+      // fragment.appendChild(option);
+
+      var selectElement = document.querySelector(dataList);
+      // clear data 
+      selectElement.innerHTML = '';
+      selectElement.appendChild(fragment);
+    }
+  }
+
+
   // Updates a weather card with the latest weather forecast. If the card
   // doesn't already exist, it's cloned from the template.
   app.updateForecastCard = function (data) {
-    var dataLastUpdated = new Date(data.created);
-    var sunrise = data.channel.astronomy.sunrise;
-    var sunset = data.channel.astronomy.sunset;
-    var current = data.channel.item.condition;
-    var humidity = data.channel.atmosphere.humidity;
-    var wind = data.channel.wind;
+    var dataLastUpdated = new Date(data.updatetime);
+    var sunrise = data.daily[0].sunrise;
+    var sunset = data.daily[0].sunset;
+    var current = data.temp;
+    var humidity = data.humidity;
+    var wind = {
+      speed: data.windspeed,
+      direction: data.winddirct
+    };
 
     // 判断现在需要显示的城市天气信息是否已经有显示,如果没有显示便准备显示
-    var card = app.visibleCards[data.key];
+    var card = app.visibleCards[data.citycode];
     if (!card) {
       card = app.cardTemplate.cloneNode(true);
       card.classList.remove('cardTemplate');
-      card.querySelector('.location').textContent = data.label;
+      card.querySelector('.location').textContent = data.city;
       card.removeAttribute('hidden');
       app.container.appendChild(card);
-      app.visibleCards[data.key] = card;
+      app.visibleCards[data.citycode] = card;
     }
 
     // Verifies the data provide is newer than what's already visible
@@ -114,13 +154,13 @@
         return;
       }
     }
-    cardLastUpdatedElem.textContent = data.created;
+    cardLastUpdatedElem.textContent = data.updatetime;
 
-    card.querySelector('.description').textContent = current.text;
-    card.querySelector('.date').textContent = current.date;
-    card.querySelector('.current .icon').classList.add(app.getIconClass(current.code));
+    card.querySelector('.description').textContent = data.index[1].detail;
+    card.querySelector('.date').textContent = data.date + ' ' + data.week;
+    card.querySelector('.current .icon').classList.add(app.getIconClass(data.img));
     card.querySelector('.current .temperature .value').textContent =
-      Math.round(current.temp);
+      Math.round(data.temp);
     card.querySelector('.current .sunrise').textContent = sunrise;
     card.querySelector('.current .sunset').textContent = sunset;
     card.querySelector('.current .humidity').textContent =
@@ -131,17 +171,20 @@
     var nextDays = card.querySelectorAll('.future .oneday');
     var today = new Date();
     today = today.getDay();
+
     for (var i = 0; i < 7; i++) {
       var nextDay = nextDays[i];
-      var daily = data.channel.item.forecast[i];
+      var daily = data.daily[i];
       if (daily && nextDay) {
+        // nextDay.querySelector('.date').textContent =
+        // app.daysOfWeek[(i + today) % 7];
         nextDay.querySelector('.date').textContent =
-          app.daysOfWeek[(i + today) % 7];
-        nextDay.querySelector('.icon').classList.add(app.getIconClass(daily.code));
+          daily.week;
+        nextDay.querySelector('.icon').classList.add(app.getIconClass(daily.day.img));
         nextDay.querySelector('.temp-high .value').textContent =
-          Math.round(daily.high);
+          Math.round(daily.day.temphigh);
         nextDay.querySelector('.temp-low .value').textContent =
-          Math.round(daily.low);
+          Math.round(daily.night.templow);
       }
     }
     if (app.isLoading) {
@@ -196,12 +239,13 @@
     request.onreadystatechange = function () {
       if (request.readyState === XMLHttpRequest.DONE) {
         if (request.status === 200) {
-          // var response = JSON.parse(request.response);
+          var response = JSON.parse(request.response);
+          console.log(response);
           // var results = response.query.results;
           // results.key = key;
           // results.label = label;
           // results.created = response.query.created;
-          // app.updateForecastCard(results);
+          app.updateForecastCard(response);
         }
       } else {
         // Return the initial weather forecast since no data is available.
@@ -231,58 +275,33 @@
     // Weather codes: https://developer.yahoo.com/weather/documentation.html#codes
     weatherCode = parseInt(weatherCode);
     switch (weatherCode) {
-      case 25: // cold
-      case 32: // sunny
-      case 33: // fair (night)
-      case 34: // fair (day)
-      case 36: // hot
-      case 3200: // not available
+      case 0: // cold
         return 'clear-day';
-      case 0: // tornado
-      case 1: // tropical storm
-      case 2: // hurricane
-      case 6: // mixed rain and sleet
-      case 8: // freezing drizzle
-      case 9: // drizzle
-      case 10: // freezing rain
-      case 11: // showers
-      case 12: // showers
-      case 17: // hail
-      case 35: // mixed rain and hail
-      case 40: // scattered showers
+      case 7: // tornado
+      case 8: // tropical storm
+      case 9: // hurricane
+      case 10: // mixed rain and sleet
+      case 11: // freezing drizzle
+      case 12: // drizzle
         return 'rain';
       case 3: // severe thunderstorms
       case 4: // thunderstorms
-      case 37: // isolated thunderstorms
-      case 38: // scattered thunderstorms
-      case 39: // scattered thunderstorms (not a typo)
-      case 45: // thundershowers
-      case 47: // isolated thundershowers
+      case 5: // isolated thunderstorms
+      case 6: // scattered thunderstorms
         return 'thunderstorms';
-      case 5: // mixed rain and snow
-      case 7: // mixed snow and sleet
-      case 13: // snow flurries
-      case 14: // light snow showers
-      case 16: // snow
-      case 18: // sleet
-      case 41: // heavy snow
-      case 42: // scattered snow showers
-      case 43: // heavy snow
-      case 46: // snow showers
+      case 13: // mixed rain and snow
+      case 14: // mixed snow and sleet
+      case 15: // snow flurries
+      case 16: // light snow showers
+      case 17: // snow
         return 'snow';
-      case 15: // blowing snow
-      case 19: // dust
-      case 20: // foggy
-      case 21: // haze
-      case 22: // smoky
+      case 18: // blowing snow
         return 'fog';
       case 24: // windy
       case 23: // blustery
         return 'windy';
-      case 26: // cloudy
-      case 27: // mostly cloudy (night)
-      case 28: // mostly cloudy (day)
-      case 31: // clear (night)
+      case 1: // cloudy
+      case 2:
         return 'cloudy';
       case 29: // partly cloudy (night)
       case 30: // partly cloudy (day)
