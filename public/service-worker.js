@@ -1,8 +1,7 @@
-var cacheName = 'weatherPWA-step-6-1';
+var cacheName = 'weatherPWA';
 var dataCacheName = 'weatherData-v1';
 var filesToCache = [
     '/',
-    '/index.html',
     '/scripts/app.js',
     '/styles/inline.css',
     '/images/clear.png',
@@ -69,7 +68,7 @@ self.addEventListener('activate', function (e) {
 
 self.addEventListener('fetch', function (e) {
 
-    var dataUrl = 'https://query.yahooapis.com/v1/public/yql';
+    var dataUrl = 'https://localhost:4000/weather/city/';
     if (e.request.url.indexOf(dataUrl) > -1) {
         console.log('fetch weatherAPI:', e.request.url);
         e.respondWith(

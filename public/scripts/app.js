@@ -1,8 +1,8 @@
 (function () {
   'use strict';
 
-  // app对象包含一些引用
-  // An app object that contains some of the key information necessary for the app.
+  // app对象包含全局变量引用
+
   var app = {
     isLoading: true,
     visibleCards: {},
@@ -11,13 +11,12 @@
     cardTemplate: document.querySelector('.cardTemplate'),
     container: document.querySelector('.main'),
     addDialog: document.querySelector('.dialog-container'),
-    daysOfWeek: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   };
 
 
   /*****************************************************************************
    *
-   * Event listeners for UI elements
+   *  绑定UI界面的事件处理函数
    *
    ****************************************************************************/
 
@@ -28,37 +27,35 @@
 
   document.getElementById('butAdd').addEventListener('click', function () {
 
-    //  add option in dataList
-    app.addDataList(window.province,'#selectProvince');
+    //  在省级跟市级下拉选项框中添加选项
+    app.addDataList(window.province, '#selectProvince');
 
-    // Open/show the add new city dialog
+    // 开/关 dialog框
     app.toggleAddDialog(true);
   });
 
-  // document.getElementById('butAddCity').addEventListener('click', function () {
-  //   // Add the newly selected city
-  //   var select = document.getElementById('selectCityToAdd');
-  //   var selected = select.options[select.selectedIndex];
-  //   var key = selected.value;
-  //   var label = selected.textContent;
-  //   // TODO init the app.selectedCities array here
-  //   app.getForecast(key, label);
-  //   // TODO push the selected city to the array and save here
-  //   app.toggleAddDialog(false);
-  // });
 
   document.getElementById('butAddCity').addEventListener('click', function () {
-    // Add the newly selected city
-    var select = document.getElementById('selectCityToAdd');
+
+    // 获取选择的省份城市
+    var select = document.getElementById('selectProvince');
     var selected = select.options[select.selectedIndex];
     var key = selected.value;
-    var label = selected.textContent;
+
+    // 检查是否是直辖市
+    if (!key) {
+      select = document.getElementById('selectCity');
+      selected = select.options[select.selectedIndex]
+      key = selected.value;
+    }
+
+    // 检查已选择城市是否存在，不存在就创建
     if (!app.selectedCities) {
       app.selectedCities = [];
     }
-    app.getForecast(key, label);
-    app.selectedCities.push({ key: key, label: label });
-    app.saveSelectedCities();
+    app.getForecast(key);
+    app.selectedCities.push({ key: key });
+    app.saveSelectedCities(); 
     app.toggleAddDialog(false);
   });
 
@@ -71,17 +68,19 @@
     var selected = this.options[this.selectedIndex];
     if (selected) {
       var cityid = selected.getAttribute('cityid');
-      app.addDataList(window.city[cityid],'#selectCity');
+      app.addDataList(window.city[cityid], '#selectCity');
     }
   })
 
+  // document.querySelector('')
+
   /*****************************************************************************
    *
-   * Methods to update/refresh the UI
+   * methods to update/refresh the UI
    *
    ****************************************************************************/
 
-  // Toggles the visibility of the add new city dialog.
+  // create new city dialog visiblity
   app.toggleAddDialog = function (visible) {
     if (visible) {
       app.addDialog.classList.add('dialog-container--visible');
@@ -91,7 +90,7 @@
   };
 
   // AddDataListInProvince
-  app.addDataList = function (arr,dataList) {
+  app.addDataList = function (arr, dataList) {
     if (arr) {
       var fragment = document.createDocumentFragment();
 
@@ -117,7 +116,7 @@
   }
 
 
-  // Updates a weather card with the latest weather forecast. If the card
+  // updates a weather card with the latest weather forecast. If the card
   // doesn't already exist, it's cloned from the template.
   app.updateForecastCard = function (data) {
     var dataLastUpdated = new Date(data.updatetime);
@@ -141,9 +140,7 @@
       app.visibleCards[data.citycode] = card;
     }
 
-    // Verifies the data provide is newer than what's already visible
-    // on the card, if it's not bail, if it is, continue and update the
-    // time saved in the card
+
     // 有可能缓存响应慢于XHR的响应
     var cardLastUpdatedElem = card.querySelector('.card-last-updated');
     var cardLastUpdated = cardLastUpdatedElem.textContent;
@@ -187,6 +184,8 @@
           Math.round(daily.night.templow);
       }
     }
+
+    // cancel the loading animation
     if (app.isLoading) {
       app.spinner.setAttribute('hidden', true);
       app.container.removeAttribute('hidden');
@@ -201,38 +200,25 @@
    *
    ****************************************************************************/
 
-  /*
-   * Gets a forecast for a specific city and updates the card with the data.
-   * getForecast() first checks if the weather data is in the cache. If so,
-   * then it gets that data and populates the card with the cached data.
-   * Then, getForecast() goes to the network for fresh data. If the network
-   * request goes through, then the card gets updated a second time with the
-   * freshest data.
-   */
   app.getForecast = function (key) {
     var url = "https://localhost:4000/weather/city/" + key
 
-    // TODO add cache logic here
     // 先检查是否有缓存，有的话就先用缓存内容，等网络有响应了再用最新内容
-    // if ('caches' in window) {
-    //   /*
-    //    * Check if the service worker has already cached this city's weather
-    //    * data. If the service worker has the data, then display the cached
-    //    * data while the app fetches the latest data.
-    //    */
-    //   caches.match(url).then(function (response) {
-    //     console.log('find cache response :', url)
-    //     if (response) {
-    //       response.json().then(function updateFromCache(json) {
-    //         var results = json.query.results;
-    //         results.key = key;
-    //         results.label = label;
-    //         results.created = json.query.created;
-    //         app.updateForecastCard(results);
-    //       });
-    //     }
-    //   });
-    // }
+    if ('caches' in window) {
+      /*
+       * Check if the service worker has already cached this city's weather
+       * data. If the service worker has the data, then display the cached
+       * data while the app fetches the latest data.
+       */
+      caches.match(url).then(function (response) {
+        console.log('find cache response :', url)
+        if (response) {
+          response.json().then(function updateFromCache(json) {
+            app.updateForecastCard(json);
+          });
+        }
+      });
+    }
 
     // Fetch the latest data.
     var request = new XMLHttpRequest();
@@ -241,15 +227,9 @@
         if (request.status === 200) {
           var response = JSON.parse(request.response);
           console.log(response);
-          // var results = response.query.results;
-          // results.key = key;
-          // results.label = label;
-          // results.created = response.query.created;
+
           app.updateForecastCard(response);
         }
-      } else {
-        // Return the initial weather forecast since no data is available.
-        // app.updateForecastCard(initialWeatherForecast);
       }
     };
     request.open('GET', url);
@@ -264,7 +244,6 @@
     });
   };
 
-  // TODO add saveSelectedCities function here
   //  将城市列表存入 localStorage.
   app.saveSelectedCities = function () {
     var selectedCities = JSON.stringify(app.selectedCities);
@@ -272,88 +251,48 @@
   };
 
   app.getIconClass = function (weatherCode) {
-    // Weather codes: https://developer.yahoo.com/weather/documentation.html#codes
     weatherCode = parseInt(weatherCode);
     switch (weatherCode) {
-      case 0: // cold
+      case 0: 
         return 'clear-day';
-      case 7: // tornado
-      case 8: // tropical storm
-      case 9: // hurricane
-      case 10: // mixed rain and sleet
-      case 11: // freezing drizzle
-      case 12: // drizzle
+      case 7: 
+      case 8: 
+      case 9: 
+      case 10: 
+      case 11: 
+      case 12: 
         return 'rain';
-      case 3: // severe thunderstorms
-      case 4: // thunderstorms
-      case 5: // isolated thunderstorms
-      case 6: // scattered thunderstorms
+      case 3: 
+      case 4: 
+      case 5: 
+      case 6: 
         return 'thunderstorms';
-      case 13: // mixed rain and snow
-      case 14: // mixed snow and sleet
-      case 15: // snow flurries
-      case 16: // light snow showers
-      case 17: // snow
+      case 13: 
+      case 14:
+      case 15: 
+      case 16: 
+      case 17:
         return 'snow';
-      case 18: // blowing snow
+      case 18: 
         return 'fog';
-      case 24: // windy
-      case 23: // blustery
+      case 24: 
+      case 23: 
         return 'windy';
-      case 1: // cloudy
+      case 1: 
       case 2:
         return 'cloudy';
-      case 29: // partly cloudy (night)
-      case 30: // partly cloudy (day)
-      case 44: // partly cloudy
+      case 29: 
+      case 30: 
+      case 44: 
         return 'partly-cloudy-day';
     }
   };
 
-  /*
-   * Fake weather data that is presented when the user first uses the app,
-   * or when the user has not saved any cities. See startup code for more
-   * discussion.
-   */
-  // var initialWeatherForecast = {
-  //   key: '2459115',
-  //   label: 'New York, NY',
-  //   created: '2016-07-22T01:00:00Z',
-  //   channel: {
-  //     astronomy: {
-  //       sunrise: "5:43 am",
-  //       sunset: "8:21 pm"
-  //     },
-  //     item: {
-  //       condition: {
-  //         text: "Windy",
-  //         date: "Thu, 21 Jul 2016 09:00 PM EDT",
-  //         temp: 56,
-  //         code: 24
-  //       },
-  //       forecast: [
-  //         { code: 44, high: 86, low: 70 },
-  //         { code: 44, high: 94, low: 73 },
-  //         { code: 4, high: 95, low: 78 },
-  //         { code: 24, high: 75, low: 89 },
-  //         { code: 24, high: 89, low: 77 },
-  //         { code: 44, high: 92, low: 79 },
-  //         { code: 44, high: 89, low: 77 }
-  //       ]
-  //     },
-  //     atmosphere: {
-  //       humidity: 56
-  //     },
-  //     wind: {
-  //       speed: 25,
-  //       direction: 195
-  //     }
-  //   }
-  // };
-  // TODO uncomment line below to test app with fake data
-  // app.updateForecastCard(initialWeatherForecast);
-
-  // TODO add startup code here
+  /************************************************************************
+   * 
+   *  APP start on
+   *  
+   ***********************************************************************/
   app.selectedCities = localStorage.selectedCities;
 
   if (app.selectedCities) {
@@ -372,7 +311,7 @@
   }
 
   // TODO add service worker code here
-  /*
+
   if ('serviceWorker' in navigator) {
     console.log('serviceWorker support , start installing Service Worker');
     navigator.serviceWorker
@@ -392,5 +331,5 @@
         })
     })
   }
-  */
+
 })();
