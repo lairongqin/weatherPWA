@@ -55,16 +55,18 @@
     }
     app.getForecast(key);
     app.selectedCities.push({ key: key });
-    app.saveSelectedCities(); 
+    app.saveSelectedCities();
     app.toggleAddDialog(false);
   });
 
   document.getElementById('butAddCancel').addEventListener('click', function () {
-    // Close the add new city dialog
+    // 关闭添加城市的对话框
     app.toggleAddDialog(false);
   });
 
   document.querySelector('#selectProvince').addEventListener('click', function (ev) {
+
+    // 根据省级选项来动态填充城市级别的内容
     var selected = this.options[this.selectedIndex];
     if (selected) {
       var cityid = selected.getAttribute('cityid');
@@ -72,7 +74,13 @@
     }
   })
 
-  // document.querySelector('')
+  document.querySelector('.main').addEventListener('click', function (ev) {
+    if (ev.target.className == 'delete') {
+      var removedCard = ev.target.parentNode;
+      var citycode = removedCard.querySelector('.city-key');
+      app.deleteCard(that);
+    }
+  })
 
   /*****************************************************************************
    *
@@ -153,6 +161,7 @@
     }
     cardLastUpdatedElem.textContent = data.updatetime;
 
+    card.querySelector('.city-key').textContent = data.citycode;
     card.querySelector('.description').textContent = data.index[1].detail;
     card.querySelector('.date').textContent = data.date + ' ' + data.week;
     card.querySelector('.current .icon').classList.add(app.getIconClass(data.img));
@@ -253,37 +262,37 @@
   app.getIconClass = function (weatherCode) {
     weatherCode = parseInt(weatherCode);
     switch (weatherCode) {
-      case 0: 
+      case 0:
         return 'clear-day';
-      case 7: 
-      case 8: 
-      case 9: 
-      case 10: 
-      case 11: 
-      case 12: 
+      case 7:
+      case 8:
+      case 9:
+      case 10:
+      case 11:
+      case 12:
         return 'rain';
-      case 3: 
-      case 4: 
-      case 5: 
-      case 6: 
+      case 3:
+      case 4:
+      case 5:
+      case 6:
         return 'thunderstorms';
-      case 13: 
+      case 13:
       case 14:
-      case 15: 
-      case 16: 
+      case 15:
+      case 16:
       case 17:
         return 'snow';
-      case 18: 
+      case 18:
         return 'fog';
-      case 24: 
-      case 23: 
+      case 24:
+      case 23:
         return 'windy';
-      case 1: 
+      case 1:
       case 2:
         return 'cloudy';
-      case 29: 
-      case 30: 
-      case 44: 
+      case 29:
+      case 30:
+      case 44:
         return 'partly-cloudy-day';
     }
   };
@@ -310,26 +319,25 @@
     app.saveSelectedCities();
   }
 
-  // TODO add service worker code here
-
-  if ('serviceWorker' in navigator) {
-    console.log('serviceWorker support , start installing Service Worker');
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then(() => { console.log('Service Worker Registered'); });
-
-    // 注册推送Manager
-    navigator.serviceWorker.ready.then(function (serviceWorkerRegistration) {
-
-      // https://developer.mozilla.org/en-US/docs/Web/API/Push_API
-      serviceWorkerRegistration.pushManager.subscribe({ userVisibleOnly: true })
-        .then(function (subscription) {
-          console.log('pushSubscription.subscriptionId', subscription.subscriptionId);
-          console.log('subscription.endpoint', subscription.endpoint);
-        }, function (error) {
-          console.log(error);
-        })
-    })
-  }
-
+  /*
+    if ('serviceWorker' in navigator) {
+      console.log('serviceWorker support , start installing Service Worker');
+      navigator.serviceWorker
+        .register('/service-worker.js')
+        .then(() => { console.log('Service Worker Registered'); });
+  
+      // 注册推送Manager
+      navigator.serviceWorker.ready.then(function (serviceWorkerRegistration) {
+  
+        // https://developer.mozilla.org/en-US/docs/Web/API/Push_API
+        serviceWorkerRegistration.pushManager.subscribe({ userVisibleOnly: true })
+          .then(function (subscription) {
+            console.log('pushSubscription.subscriptionId', subscription.subscriptionId);
+            console.log('subscription.endpoint', subscription.endpoint);
+          }, function (error) {
+            console.log(error);
+          })
+      })
+    }
+  */
 })();

@@ -45,7 +45,8 @@ function getWeatherFromRestAPI(citycode, callback) {
             fetchWeatherDataAndSave(citycode, function (newData) {
 
                 // run callback function with data 
-                callback(JSON.parse(newData.result));
+                callback(newData);
+                // console.log('new Data', newData);
             })
         }
 

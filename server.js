@@ -27,7 +27,6 @@ app.set('port', 4000);
 app.use(express.static(__dirname + '/public'));
 
 app.use('/*', function (req, res, next) {
-    console.log('receive req: ', req.url);
     if (req.protocol !== 'https') {
         res.redirect(301, 'https://localhost:4000');
         return;
@@ -38,7 +37,6 @@ app.use('/*', function (req, res, next) {
             req.socket.remoteAddress ||
             req.connection.socket.remoteAddress;
     }
-    console.log(req.ip);
     next();
 })
 
@@ -47,7 +45,6 @@ app.get('/', function (req, res) {
 })
 
 app.get('/weather/city/:city', function (req, res) {
-    console.log('in ', req.params);
     let citycode = req.params.city;
 
     // get the param to the getWeather function
