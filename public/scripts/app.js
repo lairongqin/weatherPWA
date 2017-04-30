@@ -75,10 +75,16 @@
   })
 
   document.querySelector('.main').addEventListener('click', function (ev) {
+
+    // 事件代理，如果当前点击的是delete元素
     if (ev.target.className == 'delete') {
+
+      // 获取父元素
       var removedCard = ev.target.parentNode;
-      var citycode = removedCard.querySelector('.city-key');
-      app.deleteCard(that);
+
+      // 获取删除的Card的citycode
+      var citycode = removedCard.querySelector('.city-key').textContent;
+      app.deleteCard(removedCard, citycode);
     }
   })
 
@@ -88,7 +94,24 @@
    *
    ****************************************************************************/
 
-  // create new city dialog visiblity
+  app.deleteCard = function (removedCard, citycode) {
+
+    // 从UI中删除卡片
+    removedCard.remove();
+
+    // 从visibleCards 和 selectCity中清除这个元素
+    delete app.visibleCards[citycode];
+    app.selectedCities.forEach(function (valObj, index) {
+      if (valObj.key == citycode) {
+        app.selectedCities.splice(index, 1);
+      }
+    })
+
+    // 重新保存选择城市
+    app.saveSelectedCities();
+  }
+
+  // 控制“添加城市”对话框状态
   app.toggleAddDialog = function (visible) {
     if (visible) {
       app.addDialog.classList.add('dialog-container--visible');
@@ -97,7 +120,7 @@
     }
   };
 
-  // AddDataListInProvince
+  // 在select下拉菜单中填充option
   app.addDataList = function (arr, dataList) {
     if (arr) {
       var fragment = document.createDocumentFragment();
@@ -110,22 +133,15 @@
         fragment.appendChild(option);
       });
 
-      // var option = document.createElement('option');
-      // option.value = arr[4].citycode;
-      // option.setAttribute('cityid', arr[4].cityid);
-      // option.innerText = arr[4].city;
-      // fragment.appendChild(option);
-
       var selectElement = document.querySelector(dataList);
-      // clear data 
+
+      // 添加前清空数据
       selectElement.innerHTML = '';
       selectElement.appendChild(fragment);
     }
   }
 
-
-  // updates a weather card with the latest weather forecast. If the card
-  // doesn't already exist, it's cloned from the template.
+  // 更新当前界面中的UI数据
   app.updateForecastCard = function (data) {
     var dataLastUpdated = new Date(data.updatetime);
     var sunrise = data.daily[0].sunrise;
@@ -154,13 +170,14 @@
     var cardLastUpdated = cardLastUpdatedElem.textContent;
     if (cardLastUpdated) {
       cardLastUpdated = new Date(cardLastUpdated);
-      // Bail if the card has more recent data then the data
+      // 判断如果卡片更新的事件比上一次的时间要晚，那么就不更新了。
       if (dataLastUpdated.getTime() < cardLastUpdated.getTime()) {
         return;
       }
     }
     cardLastUpdatedElem.textContent = data.updatetime;
 
+    // 添加模版内容
     card.querySelector('.city-key').textContent = data.citycode;
     card.querySelector('.description').textContent = data.index[1].detail;
     card.querySelector('.date').textContent = data.date + ' ' + data.week;
@@ -182,8 +199,7 @@
       var nextDay = nextDays[i];
       var daily = data.daily[i];
       if (daily && nextDay) {
-        // nextDay.querySelector('.date').textContent =
-        // app.daysOfWeek[(i + today) % 7];
+
         nextDay.querySelector('.date').textContent =
           daily.week;
         nextDay.querySelector('.icon').classList.add(app.getIconClass(daily.day.img));
@@ -194,7 +210,7 @@
       }
     }
 
-    // cancel the loading animation
+    // 取消loading界面
     if (app.isLoading) {
       app.spinner.setAttribute('hidden', true);
       app.container.removeAttribute('hidden');
@@ -205,20 +221,19 @@
 
   /*****************************************************************************
    *
-   * Methods for dealing with the model
+   * 处理数据的方法
    *
    ****************************************************************************/
 
   app.getForecast = function (key) {
+    // 获取远程数据库数据
     var url = "https://localhost:4000/weather/city/" + key
 
     // 先检查是否有缓存，有的话就先用缓存内容，等网络有响应了再用最新内容
     if ('caches' in window) {
-      /*
-       * Check if the service worker has already cached this city's weather
-       * data. If the service worker has the data, then display the cached
-       * data while the app fetches the latest data.
-       */
+
+      // 检查service worker 是否已经缓存了这个城市的天气信息，如果service worker缓存了这个信息，
+      // 我们就在获取服务器最新信息的同时展示这些缓存信息
       caches.match(url).then(function (response) {
         console.log('find cache response :', url)
         if (response) {
@@ -229,13 +244,13 @@
       });
     }
 
-    // Fetch the latest data.
+    // 从服务器获取数据
     var request = new XMLHttpRequest();
     request.onreadystatechange = function () {
       if (request.readyState === XMLHttpRequest.DONE) {
         if (request.status === 200) {
           var response = JSON.parse(request.response);
-          console.log(response);
+          console.log('app.getForecas ', response);
 
           app.updateForecastCard(response);
         }
@@ -245,7 +260,7 @@
     request.send();
   };
 
-  // Iterate all of the cards and attempt to get the latest forecast data
+  // 更新所有显示的可视天气卡
   app.updateForecasts = function () {
     var keys = Object.keys(app.visibleCards);
     keys.forEach(function (key) {
@@ -299,7 +314,7 @@
 
   /************************************************************************
    * 
-   *  APP start on
+   *  APP 开始步骤
    *  
    ***********************************************************************/
   app.selectedCities = localStorage.selectedCities;
