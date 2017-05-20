@@ -67,6 +67,7 @@ self.addEventListener('activate', function (e) {
 });
 
 self.addEventListener('fetch', function (e) {
+    console.log('[Service Worker] Fetch', e.request.url);
 
     var dataUrl = 'https://localhost:4000/weather/city/';
     if (e.request.url.indexOf(dataUrl) > -1) {
@@ -114,13 +115,13 @@ self.addEventListener('fetch', function (e) {
     }
 });
 
-self.addEventListener('push',function(event){
+self.addEventListener('push', function (event) {
     var title = "PUSH";
     var body = "push a notification";
     event.waitUntil(
-        self.registration.showNotification(title,{
-            body:body
+        self.registration.showNotification(title, {
+            body: body
         })
     )
-    
+
 })

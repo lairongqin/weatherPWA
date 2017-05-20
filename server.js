@@ -27,16 +27,21 @@ app.set('port', 4000);
 app.use(express.static(__dirname + '/public'));
 
 app.use('/*', function (req, res, next) {
-    if (req.protocol !== 'https') {
-        res.redirect(301, 'https://localhost:4000');
-        return;
-    }
+
+    // 重定向到https服务器
+    // if (req.protocol !== 'https') {
+    //     res.redirect(301, 'https://localhost:4000');
+    //     return;
+    // }
+    
+    //尝试获取IP地址
     function getClientIp(req) {
         return req.headers['x-forwarded-for'] ||
             req.connection.remoteAddress ||
             req.socket.remoteAddress ||
             req.connection.socket.remoteAddress;
     }
+    console.log(getClientIp(req));
     next();
 })
 

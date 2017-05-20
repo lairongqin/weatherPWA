@@ -4,6 +4,6 @@ mongoose.connect('mongodb://localhost/test');
 
 var fetch = require('../weatherAPI/fetchWeatherDataAndSave');
 
-fetch('101190101', function (db) {
+fetch('101110101', function (db) {
     console.log(db)
 })

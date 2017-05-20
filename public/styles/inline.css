@@ -279,15 +279,18 @@ body {
     -webkit-flex-grow: 1;
         -ms-flex-positive: 1;
             flex-grow: 1; }
-  .weather-forecast .current .sunset:before {
+  /*.weather-forecast .current .sunset:before {
     content: "日落: ";
-    color: #888; }
+    color: #888; }*/
   .weather-forecast .current .wind:before {
     content: "风速: ";
     color: #888; }
-  .weather-forecast .current .sunrise:before {
-    content: "日出: ";
+  .weather-forecast .current .direction:before {
+    content: "风向: ";
     color: #888; }
+  /*.weather-forecast .current .sunrise:before {
+    content: "日出: ";
+    color: #888; }*/
   .weather-forecast .current .humidity:before {
     content: "空气湿度: ";
     color: #888; }

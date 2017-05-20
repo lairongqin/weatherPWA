@@ -10,6 +10,7 @@ var fetchWeatherDataAndSave = require('./fetchWeatherDataAndSave');
 // })
 
 function getWeatherFromRestAPI(citycode, callback) {
+    console.log('getWeatherFromRestAPI');
     if (typeof citycode == "number") {
         citycode = String(citycode);
     }

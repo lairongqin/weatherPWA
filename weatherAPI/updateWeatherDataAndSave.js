@@ -6,7 +6,7 @@ function updateWeatherDataAndSave(citycode, cb) {
 
     // query from API
     var option = {
-        host: "jisutianqi.market.alicloudapi.com",
+        host: "jisutqybmf.market.alicloudapi.com",
         path: "/weather/query?citycode=" + citycode,
         headers: {
             Accept: 'application/json',

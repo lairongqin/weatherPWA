@@ -3,8 +3,9 @@ var appcode = require('../certification/appcode');
 var WeatherData = require('../mongoDB/weatherData');
 
 function fetchWeatherDataAndSave(citycode, cb) {
+    console.log('fetchWeatherDataAndSave')
     var option = {
-        host: "jisutianqi.market.alicloudapi.com",
+        host: "jisutqybmf.market.alicloudapi.com",
         path: "/weather/query?citycode=" + citycode,
         headers: {
             Accept: 'application/json',
@@ -21,7 +22,7 @@ function fetchWeatherDataAndSave(citycode, cb) {
 
             if (rawData) {
                 let parsedData = JSON.parse(rawData);
-
+                console.log('fetchWeatherDataAndSave: ',parsedData);
                 if (parsedData) {
 
                     // save in DATA base

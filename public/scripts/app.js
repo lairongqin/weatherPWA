@@ -147,10 +147,10 @@
     var sunrise = data.daily[0].sunrise;
     var sunset = data.daily[0].sunset;
     var current = data.temp;
-    var humidity = data.humidity;
+    var humidity = parseInt(data.humidity);
     var wind = {
-      speed: data.windspeed,
-      direction: data.winddirct
+      speed: data.windpower,
+      direction: data.winddirect
     };
 
     // 判断现在需要显示的城市天气信息是否已经有显示,如果没有显示便准备显示
@@ -179,18 +179,18 @@
 
     // 添加模版内容
     card.querySelector('.city-key').textContent = data.citycode;
-    card.querySelector('.description').textContent = data.index[1].detail;
+    card.querySelector('.description').textContent = data.aqi.aqiinfo.affect;
     card.querySelector('.date').textContent = data.date + ' ' + data.week;
     card.querySelector('.current .icon').classList.add(app.getIconClass(data.img));
     card.querySelector('.current .temperature .value').textContent =
       Math.round(data.temp);
-    card.querySelector('.current .sunrise').textContent = sunrise;
-    card.querySelector('.current .sunset').textContent = sunset;
+    // card.querySelector('.current .sunrise').textContent = sunrise;
+    // card.querySelector('.current .sunset').textContent = sunset;
     card.querySelector('.current .humidity').textContent =
       Math.round(humidity) + '%';
     card.querySelector('.current .wind .value').textContent =
-      Math.round(wind.speed);
-    card.querySelector('.current .wind .direction').textContent = wind.direction;
+      wind.speed;
+    card.querySelector('.current .direction').textContent = wind.direction;
     var nextDays = card.querySelectorAll('.future .oneday');
     var today = new Date();
     today = today.getDay();
@@ -227,7 +227,8 @@
 
   app.getForecast = function (key) {
     // 获取远程数据库数据
-    var url = "https://localhost:4000/weather/city/" + key
+    var url = window.location.href + 'weather/city/' + key;
+    // var url = "https://localhost:4000/weather/city/" + key
 
     // 先检查是否有缓存，有的话就先用缓存内容，等网络有响应了再用最新内容
     if ('caches' in window) {
@@ -285,6 +286,7 @@
       case 10:
       case 11:
       case 12:
+      case 301:
         return 'rain';
       case 3:
       case 4:
@@ -296,6 +298,7 @@
       case 15:
       case 16:
       case 17:
+      case 302:
         return 'snow';
       case 18:
         return 'fog';
@@ -334,25 +337,25 @@
     app.saveSelectedCities();
   }
 
-  /*
-    if ('serviceWorker' in navigator) {
-      console.log('serviceWorker support , start installing Service Worker');
-      navigator.serviceWorker
-        .register('/service-worker.js')
-        .then(() => { console.log('Service Worker Registered'); });
-  
-      // 注册推送Manager
-      navigator.serviceWorker.ready.then(function (serviceWorkerRegistration) {
-  
-        // https://developer.mozilla.org/en-US/docs/Web/API/Push_API
-        serviceWorkerRegistration.pushManager.subscribe({ userVisibleOnly: true })
-          .then(function (subscription) {
-            console.log('pushSubscription.subscriptionId', subscription.subscriptionId);
-            console.log('subscription.endpoint', subscription.endpoint);
-          }, function (error) {
-            console.log(error);
-          })
-      })
-    }
-  */
+  //   /*
+  if ('serviceWorker' in navigator) {
+    console.log('serviceWorker support , start installing Service Worker');
+    navigator.serviceWorker
+      .register('/service-worker.js')
+      .then(() => { console.log('Service Worker Registered'); });
+
+    // 注册推送Manager
+    navigator.serviceWorker.ready.then(function (serviceWorkerRegistration) {
+
+      // https://developer.mozilla.org/en-US/docs/Web/API/Push_API
+      serviceWorkerRegistration.pushManager.subscribe({ userVisibleOnly: true })
+        .then(function (subscription) {
+          console.log('pushSubscription.subscriptionId', subscription.subscriptionId);
+          console.log('subscription.endpoint', subscription.endpoint);
+        }, function (error) {
+          console.log(error);
+        })
+    })
+  }
+  //  */
 })();
